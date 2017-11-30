@@ -24,7 +24,12 @@ for i in labels:
 
 for i in data:
 	cur_image_names = data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]
-	dataset[i] = [getLR(data[i][0]), getHR(data[i][1]), getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]
+	first_set = [getLR(data[i][0]), getHR(data[i][1]), getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]
+	second_set = [getLR(data[i][1]), getHR(data[i][0]), getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]
+	third_set = [getLR(data[i][2]), getHR(data[i][0]), getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][2])]
+	fourth_set = [getLR(data[i][3]), getHR(data[i][1]), getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][3])]
+	fifth_set = [getLR(data[i][4]), getHR(data[i][1]), getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][4])]
+	dataset[i] = [first_set] + [second_set] + [third_set] + [fourth_set] + [fifth_set]
 
 
 
