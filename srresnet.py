@@ -33,7 +33,7 @@ class _Residual_Block_2(nn.Module):
         self.relu = nn.LeakyReLU(0.2, inplace=True)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(64)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels = 64, kernel_size = 2, stride = 2, bias=False)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels = 64, kernel_size=2, stride = 2, bias=False)
         self.bn3 = nn.BatchNorm2d(64)
         
     def forward(self, x):
@@ -41,7 +41,7 @@ class _Residual_Block_2(nn.Module):
         output = self.relu(self.bn1(self.conv1(x)))
         output = self.bn2(self.conv2(output))
         output = torch.add(output,identity_data)
-        ourput = self.bn3(self.conv3(output))
+        output = self.bn3(self.conv3(output))
         return output 
 
 class Net(nn.Module):
@@ -194,7 +194,7 @@ class Net3(nn.Module):
         residual2 = out2
         out = self.residual(out)
         out2 = self.residual2(out2)
-
+        
         out = torch.cat([out,out2],1)
         out = self.bn_mid(self.conv_mid(out))
         out = torch.add(out,residual)
