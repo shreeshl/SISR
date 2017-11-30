@@ -32,9 +32,3 @@ for i in data:
 	dataset[i] = [first_set] + [second_set] + [third_set] + [fourth_set] + [fifth_set]
 
 
-
-def getLR(imageFileName):
-	return np.array([0,0,2])
-
-def getHR(imageFileName):
-	return np.array([0,0,3])
