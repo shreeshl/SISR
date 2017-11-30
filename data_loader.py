@@ -52,7 +52,7 @@ def data_loader(batchSize, threads):
         hr = data_transforms(imread(path+'HR/'+file)).numpy()
         images_lr.append(lr)
         images_hr.append(hr)
-        if(len(images_lr)==5): break
+        if(len(images_lr)==15): break
 
     images_lr = np.asarray(images_lr)
     images_hr = np.asarray(images_hr)
