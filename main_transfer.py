@@ -117,7 +117,7 @@ def adjust_learning_rate(optimizer, epoch):
 
 def get_batch(dataset, iteration, bs):
     startidx = (iteration*bs)%len(dataset)
-    endidx   = (startidx+bs)%len(dataset)
+    endidx   = (startidx+bs)
     input, target, transfer = [], [], []
     for idx in range(startidx,endidx):
         input.append(dataset[idx][0])
@@ -168,11 +168,11 @@ def train(dataset, optimizer, model, criterion, epoch,f, bs):
             total_loss+=content_loss.data[0]
         if iteration%100 == 0:
             if opt.vgg_loss:
-                print("===> Epoch[{}]({}/{}): Loss: {:.10f} Content_loss {:.10f}".format(epoch, iteration, len(training_data_loader), loss.data[0], content_loss.data[0]))
-                f.write("===> Epoch[%d](%d/%d): Loss: {:%.3f} Content_loss {:%.3f}\n"%(epoch, iteration, len(training_data_loader), loss.data[0], content_loss.data[0]))
+                print("===> Epoch[{}]({}/{}): Loss: {:.10f} Content_loss {:.10f}".format(epoch, iteration, len(dataset), loss.data[0], content_loss.data[0]))
+                f.write("===> Epoch[%d](%d/%d): Loss: {:%.3f} Content_loss {:%.3f}\n"%(epoch, iteration, len(dataset), loss.data[0], content_loss.data[0]))
             else:
-                print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader), loss.data[0]))
-                f.write("===> Epoch[%d](%d/%d): Loss: {:%.3f}\n"%(epoch, iteration, len(training_data_loader), loss.data[0]))
+                print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(dataset), loss.data[0]))
+                f.write("===> Epoch[%d](%d/%d): Loss: {:%.3f}\n"%(epoch, iteration, len(dataset), loss.data[0]))
     print("Avg Loss : %.2f"%(total_loss/iteration))
     f.write("Epoch %d Avg Loss : %.2f\n"%(epoch, total_loss/iteration))
     f.flush()

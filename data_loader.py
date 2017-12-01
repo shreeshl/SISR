@@ -91,10 +91,30 @@ def data_loader_transfer():
     dataset = []
     for i in data:
         cur_image_names = data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]
-        dataset.append([getLR(data[i][0]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
-        dataset.append([getLR(data[i][1]), getHR(data[i][0]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]])
-        dataset.append([getLR(data[i][2]), getHR(data[i][0]), [getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][2])]])
-        dataset.append([getLR(data[i][3]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][3])]])
-        dataset.append([getLR(data[i][4]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][4])]])
+        dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]])
+        dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
+        dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
+        dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][1])]])
+        dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][1])]])
+    
+    return dataset
+
+def data_loader_transfer_test():
+    data = {}
+    numClasses = 103
+    for i in range(1, numClasses):
+        data[i] = []
+    images = os.listdir(path+'/LR')
+    labels = scipy.io.loadmat('imagelabels.mat')['labels'][0]
+
+    j = 0
+    for i in labels:
+        if 'png' in images[j] : data[i].append(images[j])
+        j += 1
+
+    dataset = []
+    for i in data:
+        dataset.append([getLR(data[i][0]), getHR(data[i][1]), getHR(data[i][2])])
+        if(len(dataset)==10): break
     
     return dataset
