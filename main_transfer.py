@@ -116,13 +116,13 @@ def adjust_learning_rate(optimizer, epoch):
     return lr    
 
 def get_batch(dataset, iteration, bs):
-    startidx = (iteration*bs)%len(dataset)
-    endidx   = (startidx+bs)
+    startidx = ((iteration-1)*bs)%len(dataset)
+    endidx   = min(startidx+bs, len(dataset))
     input, target, transfer = [], [], []
     for idx in range(startidx,endidx):
         input.append(dataset[idx][0])
         target.append(dataset[idx][1])
-        transfer.append(dataset[idx][2][random.randint(0,3)])
+        transfer.append(dataset[idx][2][random.randint(0,len(dataset[idx][2])-1)])
     
     return np.asarray(input), np.asarray(target), np.asarray(transfer)
 
@@ -144,6 +144,7 @@ def train(dataset, optimizer, model, criterion, epoch,f, bs):
         if opt.cuda:
             input = input.cuda()
             target = target.cuda()
+            transfer = transfer.cuda()
         
         output = model(input, transfer)
         loss = criterion(output, target)
@@ -166,7 +167,7 @@ def train(dataset, optimizer, model, criterion, epoch,f, bs):
         total_loss+=loss.data[0]
         if opt.vgg_loss:
             total_loss+=content_loss.data[0]
-        if iteration%100 == 0:
+        if iteration%bs == 0:
             if opt.vgg_loss:
                 print("===> Epoch[{}]({}/{}): Loss: {:.10f} Content_loss {:.10f}".format(epoch, iteration, len(dataset), loss.data[0], content_loss.data[0]))
                 f.write("===> Epoch[%d](%d/%d): Loss: {:%.3f} Content_loss {:%.3f}\n"%(epoch, iteration, len(dataset), loss.data[0], content_loss.data[0]))
