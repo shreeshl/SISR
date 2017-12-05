@@ -7,6 +7,7 @@ from skimage.transform import resize
 import scipy.io
 from scipy.misc import imread
 
+# path='/home/shreesh/pytorch-SRResNet-master/'
 path='/Users/shreesh/Academics/CS670/Project/'
 LR = 'LR_small/'
 HR = 'HR_small/'
@@ -20,7 +21,7 @@ def getLR(imageFileName):
 def getHR(imageFileName, imageFileName2 = 'None'):
     if imageFileName2!='None':
         new_transfer_im = descrambled_image(imread(path+LR+imageFileName2), imread(path+HR+imageFileName))
-        # return np.expand_dims(new_transfer_im,axis=0)
+        # return np.expand_dims(new_transfer_im,axis=0).astype('float32')
         return np.transpose(new_transfer_im,(2,0,1)).astype('float32')
     return data_transforms(imread(path+HR+imageFileName)).numpy()
 
@@ -66,7 +67,7 @@ def data_loader_test():
     data_transforms = transforms.Compose([
         transforms.ToTensor()
     ])
-    filenames = labels()
+    filenames = os.listdir(path+'VGG_small')
     np.random.seed(1)
     idxs = np.arange(0, len(filenames))
     np.random.shuffle(idxs)
@@ -74,30 +75,36 @@ def data_loader_test():
     images_hr = []
     for idx in idxs[:10]:
         file = filenames[idx]
-        if 'png' not in file:continue
-        lr = data_transforms(imread(path+LR+file)).numpy()
-        hr = data_transforms(imread(path+HR+file)).numpy()
+        if notValidFile(file):continue
+        lr = data_transforms(imread(path+LR+file[:-3]+'png')).numpy()
+        hr = data_transforms(imread(path+HR+file[:-3]+'png')).numpy()
         images_lr.append(lr)
         images_hr.append(hr)
     
     return [images_lr, images_hr]
+
+def notValidFile(filename):
+    if 'png' not in filename and 'jpg' not in filename: return 1
+    return 0
 
 def data_loader_transfer():
     data = {}
     numClasses = 18
     for i in range(1, numClasses):
         data[i] = []
-    images = os.listdir(path+LR)
+    images = os.listdir(path+'VGG_small')
     labels = scipy.io.loadmat('imagelabels.mat')['labels'][0]
+    images.sort()
 
     # j = 0
     # for i in labels:
     #     if 'png' in images[j] : data[i].append(images[j])
     #     j += 1
-
-    for i in range(len(images)):
-        if 'png' in images[i] : data[int(i/80)+1].append(images[i])
     
+    for i in range(len(images)):
+        if notValidFile(images[i]): continue
+        index = int(images[i][:-4].split("_")[-1])
+        data[int(index/81)+1].append(images[i][:-3]+'png')
     dataset = []
     for i in data:
         
@@ -118,21 +125,25 @@ def data_loader_transfer():
 
 def data_loader_transfer_test():
     data = {}
-    numClasses = 103
+    numClasses = 18
     for i in range(1, numClasses):
         data[i] = []
     images = os.listdir(path+LR)
     labels = scipy.io.loadmat('imagelabels.mat')['labels'][0]
-
-    j = 0
-    for i in labels:
-        if 'png' in images[j] : data[i].append(images[j])
-        j += 1
+    images.sort()
+    # j = 0
+    # for i in labels:
+    #     if 'png' in images[j] : data[i].append(images[j])
+    #     j += 1
+    for i in range(len(images)):
+        if 'png' in images[i] : data[int(i/80)+1].append(images[i])
 
     dataset = []
     for i in data:
-        dataset.append([getLR(data[i][0]), getHR(data[i][0]), getHR(data[i][2])])
-        if(len(dataset)==10): break
+        # dataset.append([getLR(data[i][0]), getHR(data[i][0]), getHR(data[i][2])])
+        dataset.append([getLR(data[i][0]), getHR(data[i][0]), getHR(data[i][2],data[i][0])])
+        dataset.append([getLR(data[i][5]), getHR(data[i][5]), getHR(data[i][4],data[i][5])])
+        
     
     return dataset
 
@@ -165,6 +176,7 @@ def descrambled_image(im1, im2):
                         l_max = l
             new_hr[i:i+cell_size,j:j+cell_size,:] = im2[k_max:k_max+cell_size, l_max:l_max+cell_size, :]
     
+    # return rgb2gray(new_hr)
     return new_hr
 
 

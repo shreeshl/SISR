@@ -68,7 +68,7 @@ def main():
         netContent = _content_model()
 
     print("===> Building model")
-    model = Net3()
+    model = Net5()
     criterion = nn.MSELoss(size_average=False)
 
     if cuda:
@@ -97,10 +97,18 @@ def main():
         else:
             print("=> no model found at '{}'".format(opt.pretrained))
     
-    # ignored_params = list(map(id, model.features.parameters()))
-    # base_params = filter(lambda p: id(p) not in ignored_params,model.parameters())
+    ignored_params = list(map(id, model.features.parameters()))
+    base_params = filter(lambda p: id(p) not in ignored_params,model.parameters())
     print("===> Setting Optimizer")
-    optimizer = optim.Adam(model.parameters(), lr=opt.lr)
+    for p in model.features.parameters():
+        p.requires_grad = False
+    # optimizer = optim.Adam(model.parameters(), lr=opt.lr)
+
+    # optimizer = optim.Adam([{'params': base_params,'lr': opt.lr},
+                            # {'params': model.features.parameters()}], 
+                            # lr=opt.lr*0.1, momentum=0.9)
+
+    optimizer = optim.Adam(base_params,lr=opt.lr*0.1, momentum=0.9)
     f = open("training_details_%s"%(time.strftime("%m_%d-%H_%M")),"w")
     
     for epoch in range(opt.start_epoch, opt.nEpochs + 1):

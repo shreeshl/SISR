@@ -29,7 +29,7 @@ if cuda and not torch.cuda.is_available():
     raise Exception("No GPU found, please run without --cuda")
 
 model = torch.load(opt.model,map_location=lambda storage, location: storage)["model"]
-
+model.eval()
 test_images = data_loader.data_loader_transfer_test()
 for i in range(len(test_images)):
     im_b  = test_images[i][0]
@@ -70,7 +70,7 @@ for i in range(len(test_images)):
     ax.set_title("GT")
 
     ax = plt.subplot("142")
-    ax.imshow(test_images[i][2].transpose(1,2,0))
+    ax.imshow(test_images[i][2].transpose(1,2,0)[:,:,0], cmap = 'Greys')
     ax.set_title("Transfer")
 
     ax = plt.subplot("143")
