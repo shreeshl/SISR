@@ -181,55 +181,59 @@ def descrambled_image(im1, im2):
     return new_hr
 
 
-def cosine(t, w):
-    d = t.dot(w)
-    d /= np.sqrt(t.dot(t))
-    d /= np.sqrt(w.dot(w))
-    return d
+def cosine(vecx, vecy):
+    norm = np.sqrt(np.dot(vecx, vecx))* np.sqrt(np.dot(vecy, vecy))
+    return np.dot(vecx, vecy) / (norm + 1e-10)
 
-def extract_hypercolumn(model, layer_indexes, image):
+def extract_hypercolumn(vgg, layer_indexes, image):
     """
     Returns hypercolumns of size(___x40x40) when you pass input image of (3,40,40).
     layer_indexes is list of layers of whose features_maps we want to add. We can send a list of all layers or any 
     specific layers we want. For eg below, I sent [2,5].
     """
     layers = [nn.Sequential(*list(vgg.features.children())[:-l]) for l in layer_indexes]
-    img = Variable(torch.from_numpy(image))
-    img = img.view(1,3,40,40)
-    features_maps = [feats(img) for feats in layers]
+    features_maps = [feats(image) for feats in layers]
     hypercolumns = []
     for convmap in features_maps:
         cmap = convmap.view(convmap.size()[1],convmap.size()[2],convmap.size()[3])
         for fmap in cmap:
             fmap = fmap.data.numpy()
-            upscaled = imresize(fmap, size=(image.shape[1],image.shape[2]), mode="F", interp='bilinear')
+            upscaled = imresize(fmap, size=(160,160), mode="F", interp='bilinear')
             hypercolumns.append(upscaled)
     return np.asarray(hypercolumns)
 
-def diff_to_be_added(model, lr, t_hr):
+def diff_to_be_added(model, vgg, lr, t_hr):
     """
     lr is (3,40,40). t_hr is (3,60,60)(whatever, doesn't matter).
     t_hr_lr is reconstructed image of hr(see the commented line-you HAVE to uncomment). So it is supposed to be same size as lr. This is most imp.
     I repeat: t_hr_lr and lr should have same exact size.
     """
 
-    to_be_added = np.zeros(lr.shape)
-    LR_hypercolumns = extract_hypercolumn(model, [2,5], lr)
-    # t_hr_lr = model(t_hr)
-    HR_hypercolumns = extract_hypercolumn(model, [2,5], t_hr_lr)
-    for i in range(lr.shape[1]):
-        for j in range(lr.shape[2]):
-            LR_hypercolumn_pixel = hypercolumns[:,i,j]
-            nearest_sim = 0
+    lr = lr.reshape(1,im_input.shape[0],im_input.shape[1],im_input.shape[2])
+    lr = model(Variable(torch.from_numpy(lr).float()))
+    LR_hypercolumns = extract_hypercolumn(vgg, [2,5], lr)
+    t_hr_lr = resize(t_hr.transpose(1,2,0),(40,40))
+    t_hr_lr = t_hr_lr.reshape(1,t_hr_lr.shape[2],t_hr_lr.shape[0],t_hr_lr.shape[1])
+    t_hr_lr = model(Variable(torch.from_numpy(t_hr_lr).float()))
+    HR_hypercolumns = extract_hypercolumn(vgg, [2,5], t_hr_lr)
+    t_hr_lr_data = t_hr_lr.data.numpy()[0]
+
+    to_be_added = np.zeros((3,160,160))
+
+    for i in range(160):
+        for j in range(160):
+            LR_hypercolumn_pixel = LR_hypercolumns[:,i,j]
+            nearest_sim = -100
             nearest_neighbor = (i,j)
-            for m in range(t_hr_lr.shape[1]):
-                for n in range(t_hr_lr.shape[2]):
+            for m in range(160):
+                for n in range(160):
                     HR_hypercolumn_pixel = HR_hypercolumns[:,m,n]
                     sim = cosine(HR_hypercolumn_pixel, LR_hypercolumn_pixel)
                     if sim > nearest_sim:
                         nearest_sim = sim
                         nearest_neighbor = (m,n)
-            to_be_added[:,i,j] = t_hr[:,i,j] - t_hr_lr[:,i,j]
+            to_be_added[:,i,j] = t_hr[:,i,j] - t_hr_lr_data[:,i,j]
+            print i, j
     return to_be_added
 
 
