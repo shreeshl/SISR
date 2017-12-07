@@ -180,6 +180,58 @@ def descrambled_image(im1, im2):
     return new_hr
 
 
+vgg = models.vgg16_bn(pretrained=True)
+
+def cosine(t, w):
+    d = t.dot(w)
+    d /= np.sqrt(t.dot(t))
+    d /= np.sqrt(w.dot(w))
+    return d
+
+def extract_hypercolumn(model, layer_indexes, image):
+    """
+    Returns hypercolumns of size(___x40x40) when you pass input image of (3,40,40).
+    layer_indexes is list of layers of whose features_maps we want to add. We can send a list of all layers or any 
+    specific layers we want. For eg below, I sent [2,5].
+    """
+    layers = [nn.Sequential(*list(vgg.features.children())[:-l]) for l in layer_indexes]
+    img = Variable(torch.from_numpy(image))
+    img = img.view(1,3,40,40)
+    features_maps = [feats(img) for feats in layers]
+    hypercolumns = []
+    for convmap in features_maps:
+        cmap = convmap.view(convmap.size()[1],convmap.size()[2],convmap.size()[3])
+        for fmap in cmap:
+            fmap = fmap.data.numpy()
+            upscaled = imresize(fmap, size=(image.shape[1],image.shape[2]), mode="F", interp='bilinear')
+            hypercolumns.append(upscaled)
+    return np.asarray(hypercolumns)
+
+def diff_to_be_added(model, lr, t_hr):
+    """
+    lr is (3,40,40). t_hr is (3,60,60)(whatever, doesn't matter).
+    t_hr_lr is reconstructed image of hr(see the commented line-you HAVE to uncomment). So it is supposed to be same size as lr. This is most imp.
+    I repeat: t_hr_lr and lr should have same exact size.
+    """
+
+    to_be_added = np.zeros(lr.shape)
+    LR_hypercolumns = extract_hypercolumn(model, [2,5], lr)
+    # t_hr_lr = model(t_hr)
+    HR_hypercolumns = extract_hypercolumn(model, [2,5], t_hr_lr)
+    for i in range(lr.shape[1]):
+        for j in range(lr.shape[2]):
+            LR_hypercolumn_pixel = hypercolumns[:,i,j]
+            nearest_sim = 0
+            nearest_neighbor = (i,j)
+            for m in range(t_hr_lr.shape[1]):
+                for n in range(t_hr_lr.shape[2]):
+                    HR_hypercolumn_pixel = HR_hypercolumns[:,m,n]
+                    sim = cosine(HR_hypercolumn_pixel, LR_hypercolumn_pixel)
+                    if sim > nearest_sim:
+                        nearest_sim = sim
+                        nearest_neighbor = (m,n)
+            to_be_added[:,i,j] = t_hr[:,i,j] - t_hr_lr[:,i,j]
+    return to_be_added
 
 
 
