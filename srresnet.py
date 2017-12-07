@@ -272,16 +272,15 @@ class Net5(nn.Module):
     def __init__(self):
         super(Net5, self).__init__()
         m = torch.load('../model_epoch_128.pth',map_location=lambda storage, location: storage)["model"]
-        self.features = nn.Sequential(*list(m.children())[:-1])
+        self.features = nn.Sequential(*list(m.children()))
 
         self.conv_input2 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=9, stride=1, padding=4, bias=False)
         self.relu2 = nn.LeakyReLU(0.2, inplace=True)
         
         self.residual2 = self.make_layer(_Residual_Block, 2)
         
-        self.conv_output = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=9, stride=1, padding=4, bias=False)
-        self.relu3 = nn.LeakyReLU(0.2, inplace=True)
         self.conv_output3 = nn.Conv2d(in_channels=64, out_channels=3, kernel_size=9, stride=1, padding=4, bias=False)
+        self.relu3 = nn.LeakyReLU(0.2, inplace=True)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -303,11 +302,9 @@ class Net5(nn.Module):
 
     def forward(self, x, y):
         
-        out = self.features(x)
+        out  = self.features(x)
         out2 = self.relu2(self.conv_input2(y))
-        residual2 = out2
         out2 = self.residual2(out2)
-        out = torch.cat([out,out2],1)
-        out = self.relu3(self.conv_output(out))
-        out = self.conv_output3(out)
+        out2 = self.relu3(self.conv_output3(out2))
+        out  = torch.add(out,0.000001*out2)
         return out

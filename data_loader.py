@@ -89,36 +89,37 @@ def notValidFile(filename):
 
 def data_loader_transfer():
     data = {}
-    numClasses = 18
+    numClasses = 103
     for i in range(1, numClasses):
         data[i] = []
-    images = os.listdir(path+'VGG_small')
+    images = os.listdir(path+'LR')
     labels = scipy.io.loadmat('imagelabels.mat')['labels'][0]
     images.sort()
 
-    # j = 0
-    # for i in labels:
-    #     if 'png' in images[j] : data[i].append(images[j])
-    #     j += 1
-    
-    for i in range(len(images)):
+    j = 0
+    for i in labels:
         if notValidFile(images[i]): continue
-        index = int(images[i][:-4].split("_")[-1])
-        data[int(index/81)+1].append(images[i][:-3]+'png')
+        data[i].append(images[j])
+        j += 1
+    
+    # for i in range(len(images)):
+    #     if notValidFile(images[i]): continue
+    #     index = int(images[i][:-4].split("_")[-1])
+    #     data[int(index/81)+1].append(images[i][:-3]+'png')
     dataset = []
     for i in data:
         
-        # dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]])
-        # dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
-        # dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
-        # dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][1])]])
-        # dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][1])]])
+        dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]])
+        dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
+        dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
+        dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][1])]])
+        dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][1])]])
 
-        dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2],data[i][0]), getHR(data[i][3],data[i][0])]])
-        dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2],data[i][1]), getHR(data[i][3],data[i][1])]])
-        dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1],data[i][2]), getHR(data[i][3],data[i][2])]])
-        dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2],data[i][3]), getHR(data[i][0],data[i][3])]])
-        dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2],data[i][4]), getHR(data[i][3],data[i][4])]])
+        # dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2],data[i][0]), getHR(data[i][3],data[i][0])]])
+        # dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2],data[i][1]), getHR(data[i][3],data[i][1])]])
+        # dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1],data[i][2]), getHR(data[i][3],data[i][2])]])
+        # dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2],data[i][3]), getHR(data[i][0],data[i][3])]])
+        # dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2],data[i][4]), getHR(data[i][3],data[i][4])]])
         # if(len(dataset)==10): break
     
     return dataset
