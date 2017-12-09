@@ -252,8 +252,10 @@ def diff_to_be_added(model, vgg, lr, t_hr):
     t_hr_lr = resize(t_hr.transpose(1,2,0),(40,40))
     t_hr_lr = t_hr_lr.reshape(1,t_hr_lr.shape[2],t_hr_lr.shape[0],t_hr_lr.shape[1])
     t_hr_lr = model(Variable(torch.from_numpy(t_hr_lr).float()))
-    HR_hypercolumns = extract_hypercolumn(vgg, [2,5], t_hr_lr)
     t_hr_lr_data = t_hr_lr.data.numpy()[0]
+    t_hr_lr_descrambled = descrambled_image(t_hr_lr_data, lr.data.numpy()[0])
+    HR_hypercolumns = extract_hypercolumn(vgg, [2,5], t_hr_lr_descrambled)
+    
 
     to_be_added = np.zeros((3,160,160))
 
@@ -262,14 +264,15 @@ def diff_to_be_added(model, vgg, lr, t_hr):
             LR_hypercolumn_pixel = LR_hypercolumns[:,i,j]
             nearest_sim = -100
             nearest_neighbor = (i,j)
-            for m in range(160):
-                for n in range(160):
+            for m in range(10):
+                for n in range(10):
                     HR_hypercolumn_pixel = HR_hypercolumns[:,m,n]
                     sim = cosine(HR_hypercolumn_pixel, LR_hypercolumn_pixel)
                     if sim > nearest_sim:
                         nearest_sim = sim
                         nearest_neighbor = (m,n)
-            to_be_added[:,i,j] = t_hr[:,i,j] - t_hr_lr_data[:,i,j]
+            m,n = nearest_neighbor
+            to_be_added[:,i,j] = t_hr[:,m,n] - t_hr_lr_descrambled[:,m,n]
             print i, j
     return to_be_added
 
