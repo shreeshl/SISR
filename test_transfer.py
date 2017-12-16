@@ -4,6 +4,7 @@ from torch.autograd import Variable
 import numpy as np
 import time, math
 import scipy.io as sio
+from scipy.misc import imresize
 import matplotlib.pyplot as plt
 import data_loader
 
@@ -16,14 +17,19 @@ def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
 def PSNR(pred, gt, shave_border=0):
-    height, width = pred.shape[:2]
-    pred = pred[shave_border:height - shave_border, shave_border:width - shave_border]
-    gt = gt[shave_border:height - shave_border, shave_border:width - shave_border]
-    imdff = pred - gt
-    rmse = math.sqrt(np.mean(imdff ** 2))
-    if rmse == 0:
+    if pred.max()<=1:
+        pred = pred*255
+        pred[pred<0] = 0
+        pred[pred>255] = 255
+    if gt.max()<=1:
+        gt = gt*255
+        gt[gt<0] = 0
+        gt[gt>255] = 255
+    mse = np.mean( (pred - gt) ** 2 )
+    if mse == 0:
         return 100
-    return 20 * math.log10(255.0 / rmse)
+    PIXEL_MAX = 255.0
+    return mse, 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
 
 opt = parser.parse_args()
 cuda = opt.cuda
@@ -40,7 +46,8 @@ for i in range(len(test_images)):
     im_b  = test_images[i][0]
     im_gt = test_images[i][1]
     im_transfer = test_images[i][2]
-    # im_transfer = np.zeros((3,160,160))
+    # im_transfer = im_gt
+    # im_transfer = np.random.randn(3,160,160)/.255
     im_input = im_b
     im_input    = im_input.reshape(1,im_input.shape[0],im_input.shape[1],im_input.shape[2])
     im_transfer = im_transfer.reshape(1,im_transfer.shape[0],im_transfer.shape[1],im_transfer.shape[2])
@@ -56,6 +63,7 @@ for i in range(len(test_images)):
     model2 = model2.cpu()
         
     start_time = time.time()
+    # out = model(im_input)
     out = model(im_input, im_transfer)
     out2 = model2(im_input)
     elapsed_time = time.time() - start_time
@@ -78,6 +86,8 @@ for i in range(len(test_images)):
 
     print("It takes {}s for processing".format(elapsed_time))
     print("PSNR : %.2f",PSNR(im_h, im_gt.transpose(1,2,0)))
+    print("PSNR : %.2f",PSNR(im_h2, im_gt.transpose(1,2,0)))
+    print("PSNR : %.2f",PSNR(imresize(im_b.transpose(1,2,0),(160,160),interp='bicubic'), im_gt.transpose(1,2,0)))
 
     fig = plt.figure(figsize=(12, 3))
     ax = plt.subplot("151")
@@ -101,5 +111,22 @@ for i in range(len(test_images)):
     # ax.imshow(rgb2gray(im_h2.astype(np.uint8)), cmap = 'gray')
     ax.imshow(im_h2.astype(np.uint8))
     ax.set_title("SRResNet")
-    plt.savefig("test_transfer/%d.png"%i)
-    # plt.show()
+    # plt.savefig("test_transfer/%d.png"%i)
+    plt.show()
+
+
+    """
+    fig = plt.figure()
+    ax = plt.subplot("121")
+    ax.imshow(test_images[i][1].transpose(1,2,0))
+
+    ax = plt.subplot("122")
+    im_transfer = test_images[i][2]
+    ax.imshow(test_images[i][2].transpose(1,2,0))
+
+    plt.show()
+
+
+
+
+    """

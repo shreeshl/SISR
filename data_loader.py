@@ -4,10 +4,10 @@ import numpy as np
 import torch.nn as nn
 import torchvision.transforms as transforms
 import os
+from skimage.color import rgb2gray
 from torch.autograd import Variable
-from skimage.transform import resize
-import scipy.io
-from scipy.misc import imread
+from scipy.misc import imresize
+from imageio import imresize
 import time
 from torchvision import models
 
@@ -19,14 +19,14 @@ data_transforms = transforms.Compose([
         transforms.ToTensor()
     ])
 vgg = models.vgg16_bn(pretrained=True)
-model = nn.Sequential(*list(vgg.features.children()))
+# model = nn.Sequential(*list(vgg.features.children()))
 
 def getLR(imageFileName):
     return data_transforms(imread(path+LR+imageFileName)).numpy()
 
 def getHR(imageFileName, imageFileName2 = 'None'):
     if imageFileName2!='None':
-        new_transfer_im = descrambled_image(imread(path+LR+imageFileName2), imread(path+HR+imageFileName),model)
+        new_transfer_im = descrambled_image(imread(path+LR+imageFileName2), imread(path+HR+imageFileName))
         # return np.expand_dims(new_transfer_im,axis=0).astype('float32')
         return np.transpose(new_transfer_im,(2,0,1)).astype('float32')
     return data_transforms(imread(path+HR+imageFileName)).numpy()
@@ -98,34 +98,34 @@ def data_loader_transfer():
     numClasses = 103
     for i in range(1, numClasses):
         data[i] = []
-    images = os.listdir(path+'LR')
+    images = os.listdir(path+LR)
     labels = scipy.io.loadmat('imagelabels.mat')['labels'][0]
     images.sort()
 
     j = 0
-    for i in labels:
-        if notValidFile(images[i]): continue
-        data[i].append(images[j])
-        j += 1
-    
-    # for i in range(len(images)):
+    # for i in labels:
     #     if notValidFile(images[i]): continue
-    #     index = int(images[i][:-4].split("_")[-1])
-    #     data[int(index/81)+1].append(images[i][:-3]+'png')
+    #     data[i].append(images[j])
+    #     j += 1
+    
+    for i in range(len(images)):
+        if notValidFile(images[i]): continue
+        index = int(images[i][:-4].split("_")[-1])
+        data[int(index/81)+1].append(images[i][:-3]+'png')
     dataset = []
     for i in data:
         
-        dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]])
-        dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
-        dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
-        dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][1])]])
-        dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][1])]])
+        # dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][1])]])
+        # dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
+        # dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1]), getHR(data[i][3]), getHR(data[i][4]), getHR(data[i][0])]])
+        # dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2]), getHR(data[i][0]), getHR(data[i][4]), getHR(data[i][1])]])
+        # dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2]), getHR(data[i][3]), getHR(data[i][0]), getHR(data[i][1])]])
 
-        # dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2],data[i][0]), getHR(data[i][3],data[i][0])]])
-        # dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2],data[i][1]), getHR(data[i][3],data[i][1])]])
-        # dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1],data[i][2]), getHR(data[i][3],data[i][2])]])
-        # dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2],data[i][3]), getHR(data[i][0],data[i][3])]])
-        # dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2],data[i][4]), getHR(data[i][3],data[i][4])]])
+        dataset.append([getLR(data[i][0]), getHR(data[i][0]), [getHR(data[i][2],data[i][0]), getHR(data[i][3],data[i][0])]])
+        dataset.append([getLR(data[i][1]), getHR(data[i][1]), [getHR(data[i][2],data[i][1]), getHR(data[i][3],data[i][1])]])
+        dataset.append([getLR(data[i][2]), getHR(data[i][2]), [getHR(data[i][1],data[i][2]), getHR(data[i][3],data[i][2])]])
+        dataset.append([getLR(data[i][3]), getHR(data[i][3]), [getHR(data[i][2],data[i][3]), getHR(data[i][0],data[i][3])]])
+        dataset.append([getLR(data[i][4]), getHR(data[i][4]), [getHR(data[i][2],data[i][4]), getHR(data[i][3],data[i][4])]])
         # if(len(dataset)==10): break
     
     return dataset
@@ -146,6 +146,7 @@ def data_loader_transfer_test():
         if 'png' in images[i] : data[int(i/80)+1].append(images[i])
 
     dataset = []
+    
     for idx,i in enumerate(data):
         # dataset.append([getLR(data[i][0]), getHR(data[i][0]), getHR(data[i][2])])
         t = time.time()
@@ -157,63 +158,74 @@ def data_loader_transfer_test():
     
     return dataset
 
-def rgb2gray(rgb):
-    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
-
-def descrambled_image(im1, im2, model):
+def descrambled_image(im1, im2):
     #im1 low  resolution image
     #im2 high resolution image
-    
+    mean = np.asarray([0.45795686, 0.48501961, 0.40760392]).reshape(1,1,3)
+    std = np.asarray([0.224, 0.225, 0.229]).reshape(1,1,3)
     im1 = resize(im1, (160,160))
     im2 = im2/255.0
     hr_size = im2.shape[0]
     new_hr  = np.zeros((hr_size,hr_size,3))
     cell_size = 40
-    im1_features = {}
-    im2_features = {}
-    t = time.time()
-    for i in range(0,hr_size, cell_size):
-        for j in range(0, hr_size, cell_size):
-            im1_patch = im1[i:i+cell_size,j:j+cell_size]
-            # im2_patch = im2[i:i+cell_size,j:j+cell_size]
-            im1_patch = np.expand_dims(im1_patch.transpose(2,0,1),0)
-            im1_patch = Variable(torch.from_numpy(im1_patch).float())
-            # im2_patch = np.expand_dims(im2_patch.transpose(2,0,1),0)
-            # im2_patch = Variable(torch.from_numpy(im2_patch).float())
-            im1_features[i,j] = model(im1_patch).data[0].numpy()[:,0,]
-            # im2_features[i,j] = model(im2_patch).data[0].numpy()[:,0,]
+    # im1_features = {}
+    # im2_features = {}
+    # t = time.time()
+    # for i in range(0,hr_size, cell_size):
+    #     for j in range(0, hr_size, cell_size):
+    #         im1_patch = im1[i:i+cell_size,j:j+cell_size] 
+    #         im2_patch = im2[i:i+cell_size,j:j+cell_size] 
+    #         im1_patch = np.expand_dims(im1_patch.transpose(2,0,1),0)
+    #         im1_patch = Variable(torch.from_numpy(im1_patch).float())
+    #         im2_patch = np.expand_dims(im2_patch.transpose(2,0,1),0)
+    #         im2_patch = Variable(torch.from_numpy(im2_patch).float())
+    #         im1_features[i,j] = extract_hypercolumn(vgg, [2,5], im1_patch)
+    #         im2_features[i,j] = extract_hypercolumn(vgg, [2,5], im2_patch)
     
-    for i in range(0,hr_size, 10):
-        for j in range(0, hr_size, 10):
-            if(hr_size-i<cell_size or hr_size-j<cell_size): continue
-            im2_patch = im2[i:i+cell_size,j:j+cell_size]
-            im2_patch = np.expand_dims(im2_patch.transpose(2,0,1),0)
-            im2_patch = Variable(torch.from_numpy(im2_patch).float())
-            im2_features[i,j] = model(im2_patch).data[0].numpy()[:,0,]
+    # for i in range(0,hr_size, cell_size):
+    #     for j in range(0, hr_size, cell_size):
+    #         if(hr_size-i<cell_size or hr_size-j<cell_size): continue
+    #         im2_patch = im2[i:i+cell_size,j:j+cell_size]
+    #         im2_patch = np.expand_dims(im2_patch.transpose(2,0,1),0)
+    #         im2_patch = Variable(torch.from_numpy(im2_patch).float())
+    #         im2_features[i,j] = model(im2_patch).data[0].numpy()[:,0,]
 
+    im1_hyper = extract_hypercolumn(vgg, [3,8,15,22,29], Variable(torch.from_numpy(im1).view(3,160,160).unsqueeze(0).float()))
+    im2_hyper = extract_hypercolumn(vgg, [3,8,15,22,29], Variable(torch.from_numpy(im2).view(3,160,160).unsqueeze(0).float()))
 
+    # weights = np.dot(im1_hyper.transpose(1,2,0).reshape(-1,1216), im2_hyper.reshape(1216,-1))
+    # new_hr = np.dot(softmax(weights),im2.reshape(-1,3))
+    t=time.time()
+    m = nn.Softmax(dim=0)
     for i in range(0,hr_size, cell_size):
         for j in range(0, hr_size, cell_size):
-            # lr_patch = im1[i:i+cell_size,j:j+cell_size,:]
-            lr_patch = im1_features[i,j]
+            lr_patch = im1[i:i+cell_size,j:j+cell_size,:]
+            # lr_patch = im1_features[i,j]
             k_max = 0
             l_max = 0
             min_error = 10**6
+            
             for k in range(0, hr_size, 10):
                 for l in range(0, hr_size, 10):
                     if(hr_size-k<cell_size or hr_size-l<cell_size): continue
-                    # hr_patch = im2[k:k+cell_size,l:l+cell_size,:]
-                    hr_patch = im2_features[k,l]
+                    hr_patch = im2[k:k+cell_size,l:l+cell_size,:]
+                    # hr_patch = im2_features[k,l]
                     res = hr_patch-lr_patch
-                    error = np.sum(np.abs(res))
+                    # error = np.sum(np.abs(res))
                     error = np.sum(res**2)
                     if error<min_error:
                         min_error = error
                         k_max = k
                         l_max = l
-            new_hr[i:i+cell_size,j:j+cell_size,:] = im2[k_max:k_max+cell_size, l_max:l_max+cell_size, :]
+            weights = np.dot(im1_hyper[:,i:i+cell_size,j:j+cell_size].reshape(im1_hyper.shape[0],-1).T,\
+                            im2_hyper[:,k_max:k_max+cell_size, l_max:l_max+cell_size].reshape(im1_hyper.shape[0],-1))
+            weights = m(Variable(torch.from_numpy(weights))).data.numpy()
+            weights[weights<0.1]=0
+            new_hr[i:i+cell_size,j:j+cell_size,:] = np.dot(weights,im2[k_max:k_max+cell_size, l_max:l_max+cell_size, :].reshape(-1,3)).reshape(cell_size,cell_size,3)
+
+            # print min_error
+    print time.time()-t
     
-    # print time.time()-t
     # return rgb2gray(new_hr)
     return new_hr
 
@@ -222,20 +234,21 @@ def cosine(vecx, vecy):
     norm = np.sqrt(np.dot(vecx, vecx))* np.sqrt(np.dot(vecy, vecy))
     return np.dot(vecx, vecy) / (norm + 1e-10)
 
-def extract_hypercolumn(vgg, layer_indexes, image):
+def extract_hypercolumn(model, layer_indexes, image):
     """
     Returns hypercolumns of size(___x40x40) when you pass input image of (3,40,40).
     layer_indexes is list of layers of whose features_maps we want to add. We can send a list of all layers or any 
     specific layers we want. For eg below, I sent [2,5].
     """
-    layers = [nn.Sequential(*list(vgg.features.children())[:-l]) for l in layer_indexes]
+
+    layers = [nn.Sequential(*list(model.features.children())[:l]) for l in layer_indexes]
     features_maps = [feats(image) for feats in layers]
     hypercolumns = []
     for convmap in features_maps:
-        cmap = convmap.view(convmap.size()[1],convmap.size()[2],convmap.size()[3])
+        cmap = convmap.squeeze(0)
         for fmap in cmap:
             fmap = fmap.data.numpy()
-            upscaled = imresize(fmap, size=(160,160), mode="F", interp='bilinear')
+            upscaled = imresize(fmap, size=(image.size()[2],image.size()[2]), mode="F", interp='bilinear')
             hypercolumns.append(upscaled)
     return np.asarray(hypercolumns)
 
